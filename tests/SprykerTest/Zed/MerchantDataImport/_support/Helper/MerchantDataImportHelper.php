@@ -57,7 +57,7 @@ class MerchantDataImportHelper extends Module
      */
     public function findMerchantByKey(string $key)
     {
-        return SpyMerchantQuery::create()
+        return $this->getMerchantQuery()
             ->filterByKey($key)
             ->findOne();
     }
