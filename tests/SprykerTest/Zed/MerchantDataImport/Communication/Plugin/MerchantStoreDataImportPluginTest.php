@@ -11,8 +11,8 @@ use Codeception\Test\Unit;
 use Generated\Shared\Transfer\DataImporterConfigurationTransfer;
 use Generated\Shared\Transfer\DataImporterReaderConfigurationTransfer;
 use Generated\Shared\Transfer\DataImporterReportTransfer;
-use Spryker\Zed\MerchantDataImport\Communication\Plugin\MerchantDataImportPlugin;
-use Spryker\Zed\MerchantDataImport\MerchantDataImportConfig;
+use Generated\Shared\Transfer\MerchantTransfer;
+use Spryker\Zed\MerchantDataImport\Communication\Plugin\MerchantStoreDataImportPlugin;
 
 /**
  * Auto-generated group annotations
@@ -22,12 +22,13 @@ use Spryker\Zed\MerchantDataImport\MerchantDataImportConfig;
  * @group MerchantDataImport
  * @group Communication
  * @group Plugin
- * @group MerchantDataImportPluginTest
+ * @group MerchantStoreDataImportPluginTest
  * Add your own group annotations below this line
  */
-class MerchantDataImportPluginTest extends Unit
+class MerchantStoreDataImportPluginTest extends Unit
 {
-    protected const MERCHANT_REFERENCE = 'MER000006-test';
+    protected const MERCHANT_KEY = 'kudu-merchant-test';
+
     /**
      * @var \SprykerTest\Zed\MerchantDataImport\MerchantDataImportCommunicationTester
      */
@@ -36,30 +37,27 @@ class MerchantDataImportPluginTest extends Unit
     /**
      * @return void
      */
-    public function testImportImportsData(): void
+    public function testImportImportsMerchantStoreData(): void
     {
-        $this->tester->deleteMerchantByReferences([static::MERCHANT_REFERENCE]);
+        // Arrange
+        $this->tester->ensureMerchantStoreTableIsEmpty();
+        $this->tester->deleteMerchantByKey(static::MERCHANT_KEY);
+
+        $merchantTransfer = $this->tester->haveMerchant([MerchantTransfer::MERCHANT_KEY => static::MERCHANT_KEY]);
 
         $dataImporterReaderConfigurationTransfer = new DataImporterReaderConfigurationTransfer();
-        $dataImporterReaderConfigurationTransfer->setFileName(codecept_data_dir() . 'import/merchant.csv');
+        $dataImporterReaderConfigurationTransfer->setFileName(codecept_data_dir() . 'import/merchant_store.csv');
 
         $dataImportConfigurationTransfer = new DataImporterConfigurationTransfer();
         $dataImportConfigurationTransfer->setReaderConfiguration($dataImporterReaderConfigurationTransfer);
 
-        $dataImportPlugin = new MerchantDataImportPlugin();
+        $dataImportPlugin = new MerchantStoreDataImportPlugin();
+
+        // Act
         $dataImporterReportTransfer = $dataImportPlugin->import($dataImportConfigurationTransfer);
 
+        //Assert
         $this->assertInstanceOf(DataImporterReportTransfer::class, $dataImporterReportTransfer);
-
-        $this->tester->assertDatabaseTableContainsData([static::MERCHANT_REFERENCE]);
-    }
-
-    /**
-     * @return void
-     */
-    public function testGetImportTypeReturnsTypeOfImporter(): void
-    {
-        $dataImportPlugin = new MerchantDataImportPlugin();
-        $this->assertSame(MerchantDataImportConfig::IMPORT_TYPE_MERCHANT, $dataImportPlugin->getImportType());
+        $this->tester->assertMerchantStoreDatabaseTableContainsData($merchantTransfer->getIdMerchant());
     }
 }
